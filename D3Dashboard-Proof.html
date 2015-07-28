@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>d3 dashboard proof of concept</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link type="text/css" rel="stylesheet" href="radialProgress.css">    
+    <style>
+      text {
+        font: 10px sans-serif;
+      }
+	  #step1ChooseData {
+		  display:block;
+		  
+	  }
+	  #step2DataCSV {
+		  display:none;
+	  }
+	  #step2DataHTML {
+		  display:none;
+	  }
+	  #dropCSVFile {
+		  border: 1px dotted #999;
+		  border-radius: 3px;
+		  width: 500px;
+		  height: 300px;
+		  padding: 5px;
+		  text-align:center;
+		  vertical-align:middle;
+	  }
+	  #selectCSVFile {
+		  vertical-align:middle;
+		  text-align:center;
+		  width: 60%;
+		  margin-left: 20%;
+		  margin-right: 20%;
+		
+	  }
+	  #dropCSVContents{
+		  margin-top: 90px;
+		  margin-bottom: 90px;
+		  margin-left: 25px;
+		  margin-right: 25px;
+	  }
+	  .column3 {
+		  display:none
+	  }
+	  #clientDataTable td {
+		  border: 1px solid black;
+	  }
+	  #step3ChooseCSVVisualizations {
+		  display: none;
+	  }
+	  #step3ChooseHTMLVisualizations {
+		  display: none;
+	  }
+	  #step4ShowCSVVisualizations {
+		  display: none;
+	  }
+	  #step4ShowHTMLVisualizations {
+		  display: none;
+	  }
+	  #step4ShowVisualizations {
+		  display: none;
+	  }
+	  /* TREE */
+      form {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+      }
+
+      .node {
+        border: solid 1px white;
+        font: 10px sans-serif;
+        line-height: 12px;
+        overflow: hidden;
+        position: absolute;
+        text-indent: 2px;
+      }	  
+	  // PIE
+		/* body {
+		  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+		  width: 960px;
+		  height: 5000px;
+		  position: relative;
+		}
+		*/
+		
+
+		
+		path.slice{
+			stroke-width:2px;
+		}
+		
+		polyline{
+			opacity: .3;
+			stroke: black;
+			stroke-width: 2px;
+			fill: none;
+		}	  
+    </style>
+	<style>
+
+        #test .arc2 {
+            stroke-weight:0.1;
+            fill: #3660b0;
+        }
+
+        #outer {
+            background:#FFFFFF;
+            border-radius: 5px;
+            color: #000;
+        }
+/*
+        #div1, #div2, #div3, #div4 {
+            width: 33%;
+            height: 200px;
+            box-sizing: border-box;
+            float: left;
+        }
+*/
+        #div2 .arc {
+            stroke-weight: 0.1;
+            fill: #f0a417;
+        }
+
+        #div2 .arc2 {
+            stroke-weight: 0.1;
+            fill: #b00d08;
+        }
+
+        #div3 .arc {
+            stroke-weight: 0.1;
+            fill: #1d871b;
+        }
+
+
+        .selectedRadial {
+            border-radius: 3px;
+            background: #f4f4f4;
+            color: #000;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            -moz-box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            border: 1px solid rgba(200,200,200,0.85);
+        }
+
+        .radial {
+            border-radius: 3px;
+            background: #FFFFFF;
+            color: #000;
+
+        }
+		.showVisualization{
+			float:left;
+			width: 200px;
+			height: 200px;
+			border: 2px solid black;
+			position:relative;
+			margin: 5px 10px;
+		}
+		.listVisualizations{
+			padding-left: 20px;
+		}
+    </style>    
+    <style>
+	  /* -------------------------------- UI ------------------------- */
+	  header {
+		  background-color:#003;
+		  color:#FFF;
+		  padding:5px 15px;
+		  font-size: 3em;
+		  text-align:center;
+	  }
+	  nav {
+		  /*
+		  background:#e6e7e8;
+		  color:#6CF;
+          float:left;
+		  padding: 5px 15px;
+		  margin-right: 20px;
+		  width: 20%;
+		  position:relative;
+		  */
+		float: left;
+		background: #e6e7e8;
+		white-space: nowrap;
+		position: relative;
+		box-shadow: inset -1px 0 0 0 rgba(0, 0, 0, 0.1);		  
+	  }
+#page-leftbar {
+    float: left;
+    background: #e6e7e8;
+    white-space: nowrap;
+    position: relative;
+    box-shadow: inset -1px 0 0 0 rgba(0, 0, 0, 0.1);
+}
+    #page-leftbar:before,
+    #page-leftbar:after {
+        content: " ";
+        display: table;
+    }
+    #page-leftbar:after {
+        clear: both;
+    }
+
+
+
+    #page-leftbar .collapse.in {
+        padding: 5px 0 5px;
+    }
+
+    #page-leftbar .collapse {
+        padding: 0;
+    }
+/* Sidebar Menu */
+#sidebar {
+    white-space: normal;
+    margin: 10px 0 0 0;
+    padding-left: 0 !important;
+}
+
+    #sidebar .badge {
+        font-weight: 600;
+        background-color: rgba(21, 22, 26, 0.6);
+        right: 25px !important;
+    }
+
+    #sidebar i {
+        color: #3f444c;
+        margin-left: 1px;
+        margin-right: 8px;
+        min-width: 15px;
+        text-align: center;
+        display: inline-block;
+    }
+
+    #sidebar .divider {
+        height: 1px;
+        width: 100%;
+        margin: 10px 0px;
+        overflow: hidden;
+        box-shadow: inset -1px 0 0 0 rgba(0, 0, 0, 0.1);
+        background-color: #d2d3d6;
+    }
+
+        #sidebar .divider:hover {
+            background-color: #d2d3d6;
+        }
+
+    #sidebar a {
+        text-decoration: none;
+    }
+
+    #sidebar ul {
+        padding: 5px 0;
+        list-style: none;
+    }
+
+    #sidebar ul {
+        padding-left: 0 !important;
+    }
+
+        #sidebar ul,
+        #sidebar ul li a {
+            background: #dfe0e2;
+            color: rgba(63, 68, 76, 0.7);
+            box-shadow: inset -1px 0 0 0 rgba(0, 0, 0, 0.1);
+        }
+
+    #sidebar li.active i,
+    #sidebar li.active a:hover i {
+        color: #ffffff;
+    }
+
+    #sidebar li a {
+        color: #3f444c;
+        display: block;
+        padding: 10px;
+        position: relative;
+    }
+
+    #sidebar a:hover {
+        background-color: #d2d3d6;
+        color: #3f444c;
+        box-shadow: inset -1px 0 0 0 rgba(0, 0, 0, 0.1);
+    }
+
+        #sidebar a:hover i {
+            color: #3f444c;
+        }
+
+    #sidebar > li.active > a {
+        background: #595f69;
+        color: #ffffff;
+        box-shadow: inset -1px 0 0 0 rgba(0, 0, 0, 0.1);
+    }
+
+        #sidebar > li.active > a:after {
+            width: 0px;
+            height: 0px;
+            border-style: solid;
+            border-width: 9px 9px 9px 0;
+            border-color: transparent #f7f8fa transparent transparent;
+            content: "";
+            position: absolute;
+            top: 50%;
+            margin-top: -9px;
+            right: 0px;
+        }
+
+    #sidebar ul li a {
+        padding: 5px 10px 5px 37px;
+    }
+
+    #sidebar ul li.active:not(.open) > a {
+        font-weight: 600;
+        color: #3f444c;
+    }
+
+    #sidebar li ul {
+        display: none;
+    }
+
+    #sidebar ul ul {
+        padding: 0;
+    }
+
+    #sidebar li li li a {
+        padding-left: 60px;
+    }
+
+    #sidebar ul ul ul li a {
+        padding-left: 80px;
+    }
+
+    #sidebar ul ul ul ul li a {
+        padding-left: 100px;
+    }
+
+    #sidebar li.hasChild > a {
+        position: relative;
+    }
+
+        #sidebar li.hasChild > a:before,
+        #sidebar li.hasChild > a:after {
+            content: " ";
+            display: table;
+        }
+
+        #sidebar li.hasChild > a:after {
+            clear: both;
+        }
+
+        #sidebar li.hasChild > a:before,
+        #sidebar li.hasChild > a:after {
+            content: " ";
+            display: table;
+        }
+
+        #sidebar li.hasChild > a:after {
+            clear: both;
+        }
+        /* Remove the :hover from the following lines for arrows to appear always */
+        #sidebar li.hasChild > a:before,
+        #sidebar li.hasChild.open > a:before {
+            content: "\f105";
+            opacity: 0.5;
+            filter: alpha(opacity=50);
+        }
+
+    #sidebar li.hasChild.open > a:before {
+        content: "\f107";
+        opacity: 0.5;
+        filter: alpha(opacity=50);
+    }
+
+    #sidebar li.hasChild > a:before,
+    #sidebar li.hasChild.open > a:before {
+        font-family: FontAwesome;
+        font-style: normal;
+        font-weight: normal;
+        font-size: 14px !important;
+        text-decoration: inherit;
+        text-align: right;
+        padding-right: 0px;
+        display: inline-block;
+        float: right;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    #sidebar li.hasChild li.hasChild a:before {
+        top: 5px;
+    }
+
+body.collapse-leftbar #sidebar > li.hasChild.open > a:before {
+    content: "";
+}
+
+body.collapse-leftbar #sidebar > li.hasChild > a:before {
+    content: "";
+}
+
+body.collapse-leftbar #sidebar > li.hasChild:hover > a:before {
+    content: "";
+}
+/* Sidebar Layout + Responsive */
+#page-leftbar {
+    width: 230px;
+}
+
+
+	  .smallButton {
+		  background-color:#39F;
+		  font-size: 1em;
+		  color:#333;
+	  }
+	  #allVisualizations {
+		  float:left;
+		  position:relative;
+	  }
+	  section {
+		  float:left;
+		  width: 70%;
+		  margin-left: 20px;
+	  }
+	  form {
+		  position: absolute;
+		  right: 10px;
+		  top: 10px;
+	  }
+	  
+	  
+	  /* SUNBURST */
+	  
+
+#sequence {
+  width: 100%;
+  
+}
+
+#sequence text, #legend text {
+  font-weight: 600;
+  fill: #fff;
+}
+
+#chart {
+  position: relative;
+}
+
+#chart path {
+  stroke: #fff;
+}
+
+#explanation {
+  position: absolute;
+  top: 50px;
+  left: 55px;
+  width: 100px;
+  text-align: center;
+  color: #666;
+  z-index: -1;
+}
+
+#percentage {
+  font-size: 2.5em;
+}
+	  
+/*    END SUNBURST     */
+/*    BEGIN BOXPLOT    */
+.box {
+  font: 10px sans-serif;
+  
+}
+
+.box line,
+.box rect,
+.box circle {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 1.5px;
+}
+
+.box .center {
+  stroke-dasharray: 3,3;
+}
+
+.box .outlier {
+  fill: none;
+  stroke: #ccc;
+}
+
+/* ------- END BOX PLOT -------- */
+/* ------- MOUSE POINTERS -------- */
+.mousePointer {
+	cursor: pointer;
+}
+.mouseDefault {
+	cursor: default;
+}
+/* ------- END MOUSE POINTERS -------- */
+
+/* -------- BEGIN VISUALIZATION OUTER CONTAINER DIV -------------- */
+.visualizationContainer{
+	border: 2px solid black; 
+	float:left; 
+	text-align:center;
+}
+ 
+/* -------- END VISUALIZATION OUTER CONTAINER DIV -------------- */
+
+/* -------- CAROUSEL BOOTSTRAP ----------*/
+.carousel-inner > .item > img,
+  .carousel-inner > .item > a > img {
+      width: 70%;
+      margin: auto;
+  }
+  #step5ShowCarousel {
+	  display:none;
+  }
+  #myCarousel div {
+	  margin-left: 50px;
+  }
+  .carousel-control.left, .carousel-control.right {
+    background-image: none
+  }
+/* --------- END CAROUSEL ---------------*/
+	</style>
+  </head>
+  <body>
+    <header>
+      Sample D3 Visualizations
+    </header>
+    <nav id="page-leftbar" role="navigation">
+      <ul class="acc-menu" id="sidebar">
+        <li id="nav1Home"><a class="list-group-item" href="/Demos/D3Dashboard-Proof.html"><i class="fa fa-home fa-fw"></i>&nbsp; Select Data Type</a></li>
+        <li id="nav2Data"><a class="list-group-item" href="#" id="step2Link"><i class="fa fa-database fa-fw"></i>&nbsp; Data</a></li>
+        <li id="nav3Preview"><a class="list-group-item" href="#" id="step3Link"><i class="fa fa-pencil fa-fw"></i>&nbsp; Choose Visualizations</a></li>
+        <li id="nav4View"><a class="list-group-item" href="#" id="step4Link"><i class="fa fa-picture-o fa-fw"></i>&nbsp; View Visualizations</a></li>
+      </ul>
+
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+      <p>&nbsp;</p>
+    </nav>
+    <section id="step1ChooseData">
+      <h1>Step 1: Select File Type</h1>
+      <div>There are two ways to provide data to this demo. You can either:
+        <ul><li> upload a .CSV file with your data (formatted exactly as expected--details provided on the next page), or </li>
+          <li>you can type 
+      your data manually one row at a time.</li>
+        </ul>
+        Please click on the input method that you want to use.<br><br></div>
+      <div><input type="button" id="goCSVUpload" value=".CSV File Upload" class="btn btn-success">
+      <input type="button" id="goManualData" value="Enter Your Data Manually" class="btn btn-success"></div>
+    </section>
+    <section id="step2DataCSV">
+      <h1>Step 2: Upload .CSV File</h1>
+      Drag and drop your .CSV file into the box below or click the button below (buttons vary depending on the browser).<br>
+        <br>
+        Upload either a 2-column (named 'Bubble.csv)' or a 3-column (named 'Bubble3.csv') .csv file. The column headers must be: 'Name', 'Value' for the two column file and
+        'label' 'value1' 'value2' for the three-column .csv. You can also modify these sample files 
+        (<a href="/Demos/sBubble.csv" download="Bubble.csv">2-column</a> or <a href="/Demos/sBubble3.csv" download="Bubble3.csv">3-column</a>) 
+        to create your data and upload the file following 
+        the instructions above.
+      <div id="dropCSVFile">
+        
+        
+        <div id="dropCSVContents">
+        drop your .CSV file inside this box or click on the "Browse" button to select a file from your computer.
+        <input type="file" id="selectCSVFile" value="Select CSV File" class="btn btn-success" align="middle">
+        </div>
+      </div><!-- This div is referenced in JavaScript by position. do not move -->
+      <br><br>
+      <input type="button" id="viewCSVVisualizations" value="View List of 2-Column Visualizations" class="btn btn-success">
+      <input type="button" id="viewCSV3Visualizations" value="View List of 3-Column Visualizations" class="btn btn-success">
+    </section>
+    <section id="step2DataHTML">
+      <h1>Step 2: Enter your data in the table below. </h1>
+      <div>You can create either two or three sets of data. Different visuals
+      are applicable to two data series compared to three data series.<br>
+      Columns:
+      <select id="chooseTwoOrThree">
+        <option value="2" selected>Two</option>
+        <option value="3">Three</option>
+      </select>
+      </div>
+      <div id="enterData">
+	    <table id="clientDataTable">
+		  <thead>
+            <tr>
+              <th colspan="2"></th>
+            <tr>
+              <th>Column 1</th>
+              <th>Column 2</th>
+              <th class="column3">Column 3</th>
+            </tr>
+            <tr>
+              <td><input id="itemid" class="dataInput"></td>
+              <td><input id="itemValue1"></td>
+              <td class="column3"><input id="itemValue2"></td>
+              <td><input type="submit" id="addRow" value="Add Row" class="btn btn-primary"></td>
+            </tr>
+          </thead>
+          <tbody id="databaseData">
+          </tbody>
+		</table>
+        <input type="submit" id="deleteRows" value="Delete All Rows" class="btn btn-danger">
+	  </div><!-- This div is referenced in JavaScript by position. do not move -->
+      <br><br>
+      <input type="button" id="viewHTMLVisualizations" value="View List of 2-Column Visualizations" class="btn btn-success">
+      <input type="button" id="viewHTML3Visualizations" value="View List of 3-Column Visualizations" class="btn btn-success">
+    </section>
+    
+    <section id="step3ChooseCSVVisualizations">
+      <h1>Step 3. CSV Visualization List</h1>
+      <div id="csvColumnsRows" class="listVisualizations"></div>
+      <div id="csvVisualizations2" class="listVisualizations">
+        <ul>
+          <li>Bubble</li>
+          <li>Treemap</li>
+          <li>Doughtnut</li>
+          <li>Radial Progress</li>
+        </ul>
+        <input type="button" id="showCSVVisualizations" value="Show 2-Column Visualizations" class="btn btn-success">  
+      </div>
+      <div id="csvVisualizations3" class="listVisualizations">
+        <ul>
+          <li>Stacked/Bar</li>
+          <li>Streamgraph</li>
+          <li>Sunburst</li>
+          <li>Boxplot</li>
+          <li>Dotplot</li>
+        </ul>
+        <input type="button" id="showCSV3Visualizations" value="Show 3-Column Visualizations" class="btn btn-success">
+      </div>
+      
+    </section>
+    <section id="step3ChooseHTMLVisualizations">
+      <h1>Step 3. HTML Visualization List</h1>
+      <div id="htmlColumnsRows"></div>
+      <div id="htmlVisualizations2" class="listVisualizations">
+        <ul>
+          <li>Bubble</li>
+          <li>Treemap</li>
+          <li>Doughtnut</li>
+          <li>Radial Progress</li>
+        </ul>
+        <input type="button" id="showHTMLVisualizations" value="Show 2-Column Visualizations" class="btn btn-success">  
+      </div>
+      <div id="htmlVisualizations3" class="listVisualizations">
+        <ul>
+          <li>Stacked/Bar</li>
+          <li>Streamgraph</li>
+          <li>Sunburst</li>
+          <li>Boxplot</li>
+          <li>Dotplot</li>
+        </ul>
+        <input type="button" id="showHTML3Visualizations" value="Show 3-Column Visualizations" class="btn btn-success">
+      </div>
+      
+    </section>
+    <section id="step4ShowVisualizations">
+        <div id="stackedGroupedContainer" class="visualizationContainer">
+          <div id="stackedGrouped" class="showVisualization">
+            <form>
+              <label><input type="radio" name="mode" value="grouped"> Grouped</label>
+              <label><input type="radio" name="mode" value="stacked" checked> Stacked</label>
+            </form>          
+          </div><br>
+          <label><input type="checkbox" name="chkStackedGrouped" id="chkStackedGrouped"> Stacked/Grouped</label>
+        </div>
+        <div id="streamGraphContainer" class="visualizationContainer">
+          <div id="streamGraph" class="showVisualization">
+          </div><br>
+          <label><input type="checkbox" name="chkStreamGraph" id="chkStreamGraph"> Streamgraph</label>
+        </div>
+        <div id="boxPlotContainer" class="visualizationContainer">
+          <div id="boxPlot" class="showVisualization">
+          
+          </div><br>
+          <label><input type="checkbox" name="chkBoxPlot" id="chkBoxPlot"> Box Plot</label>
+        </div>
+        <div id="dotPlotContainer" class="visualizationContainer">
+          <div id="dotPlot" class="showVisualization">
+          
+          </div><br>
+          <label><input type="checkbox" name="chkDotPlot" id="chkDotPlot"> Dot Plot</label>
+        </div>
+        <div id="sunBurstContainer" class="visualizationContainer">
+          <div id="sunBurst" class="showVisualization">
+
+              <div id="main">
+                <div id="sequence"></div>
+                <div id="chart">
+                  <div id="explanation" style="visibility: hidden;">
+                    <span id="percentage"></span><br/>
+                    of visits begin with this sequence of pages
+                  </div>
+                </div>
+              </div>
+          </div><br>
+          <label><input type="checkbox" name="chkSunBurst" id="chkSunBurst"> Sun Burst</label>
+        </div>
+      <div id="allVisualizations">
+        <div id="bubbleOuterContainer" class="visualizationContainer">
+          <div id="bubbleContainer" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkBubble" id="chkBubble"> Bubble</label>
+        </div>
+        <div id="donutPieContainer" class="visualizationContainer">
+          <div id="donutPie" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkDonutPie" id="chkDonutPie"> Donut Pie</label>
+        </div>
+        <div id="treeMapContainer" class="visualizationContainer">
+          <div id="treeMap" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkTreeMap" id="chkTreeMap"> Tree Map</label>
+        </div>
+        <div id="radial0Container" class="visualizationContainer">
+          <div id="div0" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkRadial0" id="chkRadial0"> Radial 0</label>
+        </div>
+        <div id="radial1Container" class="visualizationContainer">
+          <div id="div1" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkRadial1" id="chkRadial1"> Radial 1</label>
+        </div>
+        <div id="radial2Container" class="visualizationContainer">
+          <div id="div2" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkRadial2" id="chkRadial2"> Radial 2</label>
+        </div>
+        <div id="radial3Container" class="visualizationContainer">
+          <div id="div3" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkRadial3" id="chkRadial3"> Radial 3</label>
+        </div>
+        <div id="radial4Container" class="visualizationContainer">
+          <div id="div4" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkRadial4" id="chkRadial4"> Radial 4</label>
+        </div>
+        <div id="radial5Container" class="visualizationContainer">
+          <div id="div5" class="showVisualization"></div><br>
+          <label><input type="checkbox" name="chkRadial5" id="chkRadial5"> Radial 5</label>
+        </div>
+          <!-- <div id="div6" class="showVisualization"></div>
+          <div id="div7" class="showVisualization"></div>
+          -->
+      </div>
+      <div>
+        <input type="button" id="showStep5" value="Show Carousel" class="btn btn-success">
+      </div>
+      
+    </section>
+    <section id="step5ShowCarousel">
+        <div>
+          <br><br>
+          <div id="myCarousel" class="carousel slide" data-ride="carousel">
+            <!-- Wrapper for slides -->
+            <div class="carousel-inner" role="listbox">
+              <div class="item active" style="height:600px">
+                The selected visualisations have been placed in the carousel.
+              </div>
+            </div>
+        
+            <!-- Left and right controls -->
+            <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
+              <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+              <span class="sr-only">Previous</span>
+            </a>
+            <a class="right carousel-control" href="#myCarousel" role="button" data-slide="next">
+              <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+              <span class="sr-only">Next</span>
+            </a>
+            <!-- Indicators -->
+            <ol class="carousel-indicators" style="background-color:#000;">
+              <li data-target='#myCarousel' data-slide-to="0"></li>
+            </ol>
+        
+          
+          
+          </div>
+        </div>
+    
+    </section>
+    <!--<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="/js/modulePattern.js"></script>
+    <script src="D3Dashboard-Proof.js"></script>
+
+    <script src="Graphs.js"></script>
+	<script src="radialProgress.js"></script>
+
+    
+  </body>
+</html>
